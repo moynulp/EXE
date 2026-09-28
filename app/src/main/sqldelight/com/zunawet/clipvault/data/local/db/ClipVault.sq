@@ -1,0 +1,46 @@
+CREATE TABLE clips (
+ id TEXT NOT NULL PRIMARY KEY,
+ type TEXT NOT NULL,
+ content TEXT NOT NULL,
+ ocr_text TEXT,
+ preview TEXT NOT NULL,
+ content_hash TEXT NOT NULL,
+ is_pinned INTEGER NOT NULL DEFAULT 0,
+ is_starred INTEGER NOT NULL DEFAULT 0,
+ tags TEXT NOT NULL DEFAULT '',
+ source_app TEXT,
+ size_bytes INTEGER,
+ created_at INTEGER NOT NULL,
+ updated_at INTEGER NOT NULL
+);
+CREATE INDEX clips_date ON clips(is_pinned DESC, created_at DESC);
+CREATE INDEX clips_hash ON clips(content_hash);
+CREATE TABLE settings (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE keybinds (action TEXT NOT NULL PRIMARY KEY, modifiers TEXT NOT NULL, key TEXT NOT NULL, is_default INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE excluded_apps (id TEXT NOT NULL PRIMARY KEY, process_name TEXT NOT NULL UNIQUE, added_at INTEGER NOT NULL);
+allClips:
+SELECT * FROM clips ORDER BY is_pinned DESC, created_at DESC;
+insertClip:
+INSERT INTO clips(id,type,content,ocr_text,preview,content_hash,source_app,size_bytes,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?);
+pin:
+UPDATE clips SET is_pinned = ?, updated_at = ? WHERE id = ?;
+ocr:
+UPDATE clips SET ocr_text = ?, updated_at = ? WHERE id = ?;
+deleteClip:
+DELETE FROM clips WHERE id = ?;
+clearUnpinned:
+DELETE FROM clips WHERE is_pinned = 0;
+allSettings:
+SELECT * FROM settings;
+putSetting:
+INSERT OR REPLACE INTO settings(key,value) VALUES (?,?);
+allKeybinds:
+SELECT * FROM keybinds;
+putKeybind:
+INSERT OR REPLACE INTO keybinds(action,modifiers,key,is_default) VALUES (?,?,?,?);
+allExcluded:
+SELECT process_name FROM excluded_apps;
+addExcluded:
+INSERT OR IGNORE INTO excluded_apps(id,process_name,added_at) VALUES (?,?,?);
+removeExcluded:
+DELETE FROM excluded_apps WHERE process_name = ?;
